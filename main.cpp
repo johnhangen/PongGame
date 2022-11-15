@@ -2,60 +2,90 @@
 #include <iostream>
 
 int main() {
-    const int screenX = 1200;
-    const int screenY = 600;
-    int rectYpos = 300;
-    int ballVecX = 5;
-    int ballVacY = 5;
-    int ballposx = 600;
-    int ballposy = 300;
-    int playerScore = 0;
-    int computerScore = 0;
-    InitWindow(screenX, screenY, "Pong");
+    const int screenX = 600;
+    const int screenY = 400;
+    const int rows = 8;
+    const int cols = 30;
 
-    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    // structs
+    typedef struct Ball{
+        Vector2 pos;
+        Vector2 vel;
+    } Ball;
 
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
-        // Update
-        ballposx = ballposx + ballVecX;
-        ballposy = ballposy + ballVacY;
+    typedef struct Brick{
+        Vector2 pos;
+        bool active;
+    } Brick;
 
-        if(IsKeyDown(KEY_UP)){
-            rectYpos = rectYpos - 5;
-        } else if (IsKeyDown(KEY_DOWN)){
-            rectYpos = rectYpos + 5;
+    static Ball ball;
+    static Brick brick[30][8];
+
+    for(int i = 0; i <= cols - 1; i++){
+        for(int j = 0; j <= rows - 1; j++) {
+            brick[i][j].pos.x = i*20;
+            brick[i][j].pos.y = j*20;
+            brick[i][j].active = true;
+        }
+    }
+
+    ball.pos.x = 300;
+    ball.pos.y = 350;
+    ball.vel.x = -5;
+    ball.vel.y = 5;
+
+    int barX = 300;
+
+    InitWindow(screenX, screenY, "Brick Breaker");
+    SetTargetFPS(60);
+
+    while (!WindowShouldClose()){
+        // update
+        for(int i = 0; i <= cols - 1; i++){
+            for(int j = 0; j <= rows - 1; j++) {
+                // hit bellow
+                if(ball.pos.y >= brick[i][j].pos.y && ball.pos.x >= brick[i][j].pos.x && brick[i][j].active){
+                    std::cout << "bellow";
+                    brick[i][j].active = false;
+                    ball.vel.x = 5;
+                }
+            }
         }
 
+        ball.pos.x = ball.pos.x + ball.vel.x;
+        ball.pos.y = ball.pos.y + ball.vel.y;
 
-        if(ballposx <= 0) {
-            ballVecX = 5;
-            computerScore = computerScore + 1;
-        } else if (ballposx >= screenX){
-            ballVecX = -5;
-            playerScore = playerScore + 1;
-        } else if (ballposy <= 0){
-            ballVacY = 5;
-        } else if (ballposy >= screenY){
-            ballVacY = -5;
-        } else if (ballposx >= 1150 && rectYpos - 40 <= ballposy && ballposy <= rectYpos +40) {
-            ballVecX = -5;
-        } else if (ballposx <= 55) {
-            ballVecX = 5;
+        if(IsKeyDown(KEY_LEFT)){
+            barX = barX - 7;
+        } else if (IsKeyDown(KEY_RIGHT)){
+            barX = barX + 7;
         }
 
-        // Draw
+        if(ball.pos.x <= 0) {
+            ball.vel.x = 5;
+        } else if (ball.pos.x >= screenX){
+            ball.vel.x = -5;
+        } else if (ball.pos.y <= 0){
+            ball.vel.y = 5;
+        } else if (ball.pos.y >= screenY) {
+            ball.vel.y = -5;
+        } else if (ball.pos.y >= 370 && barX - 30 <= ball.pos.x && ball.pos.x <= barX + 30) {
+            ball.vel.y = -5;
+        }
+
+        // draw
         BeginDrawing();
 
-        ClearBackground(BLACK);
-        DrawLine(600,0,600,600, WHITE);
-        DrawRectangle(1150, rectYpos - 30, 5, 80, WHITE);
-        DrawRectangle(50, ballposy - 30, 5, 80, WHITE);
-        DrawCircle(ballposx, ballposy, 5, WHITE);
-        DrawText("0", 560, 5, 50, WHITE);
-        DrawText("0", 615, 5, 50, WHITE);
-
+        ClearBackground(WHITE);
+        DrawRectangle(barX, 370, 60, 5, BLACK);
+        DrawCircle(ball.pos.x, ball.pos.y, 5, BLACK);
+        for(int i = 0; i <= cols - 1; i++){
+            for(int j = 0; j <= rows - 1; j++) {
+                if(brick[i][j].active) {
+                    DrawRectangle(brick[i][j].pos.x, brick[i][j].pos.y, 19, 19, RED);
+                }
+            }
+        }
         EndDrawing();
     }
 
